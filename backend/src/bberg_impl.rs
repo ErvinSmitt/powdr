@@ -1,13 +1,12 @@
-use std::io::{self};
+use std::io::{self, Read, Write};
 
 use crate::{BackendImpl, BackendImplWithSetup, Proof};
 use ast::analyzed::Analyzed;
-
-// We do not directly have a bberg prover at the moment
-// however we can just perform codegen
 use bberg::bberg_codegen::BBergCodegen;
 use number::{DegreeType, FieldElement};
 
+/// Implementation of the `BackendImpl` trait for the `BBergCodegen`.
+/// This does not produce proofs directly but handles code generation.
 impl<T: FieldElement> BackendImpl<T> for BBergCodegen {
     fn new(degree: DegreeType) -> Self {
         BBergCodegen::assert_field_is_compatible::<T>();
@@ -24,27 +23,31 @@ impl<T: FieldElement> BackendImpl<T> for BBergCodegen {
     ) -> (Option<Proof>, Option<String>) {
         self.build_ast(pil, fixed, witness, bname);
 
-        // Note(md): In the current bberg impl we do not produce proofs here
-        // as we do cpp code generation, and then create proofs with bberg
-        // This may change in the future when the library matures to be more pluggable
+        // Note: Currently, `BBergCodegen` does not produce proofs as it focuses on C++ code generation.
+        // This may change in the future when the library becomes more pluggable.
         (None, None)
     }
 }
 
+/// Implementation of the `BackendImplWithSetup` trait for the `BBergCodegen`.
 impl<T: FieldElement> BackendImplWithSetup<T> for BBergCodegen {
-    fn new_from_setup(mut input: &mut dyn io::Read) -> Result<Self, io::Error> {
+    fn new_from_setup(mut input: &mut dyn Read) -> Result<Self, io::Error> {
         BBergCodegen::assert_field_is_compatible::<T>();
         BBergCodegen::new_from_setup(&mut input)
     }
 
-    // TODO: implement this
-    fn write_setup(&self, _output: &mut dyn io::Write) -> Result<(), io::Error> {
-        Ok(())
+    // This method should write the setup data to the provided output stream.
+    fn write_setup(&self, _output: &mut dyn Write) -> Result<(), io::Error> {
+        // Placeholder implementation. Uncomment the following line when the actual method is implemented.
         // self.write_setup(&mut output)
+        Ok(())
     }
 }
 
+/// Mock backend for testing purposes.
+/// This mock does not perform actual proof generation or aggregation.
 pub struct BBergMock;
+
 impl<T: FieldElement> BackendImpl<T> for BBergMock {
     fn new(_degree: DegreeType) -> Self {
         Self
@@ -62,7 +65,7 @@ impl<T: FieldElement> BackendImpl<T> for BBergMock {
             unimplemented!("BBergMock backend does not support aggregation");
         }
 
-        // TODO: mock prover
+        // TODO: Implement a mock prover for testing.
         unimplemented!("BBergMock backend is not implemented");
     }
 }
